@@ -8,11 +8,11 @@ import sqlite3
 
 class Subject:
     @staticmethod
-    def create_subject(name, description, created_by):
+    def create_subject(name, description, created_by, year=None, code=None):
         conn = get_db_connection()
         try:
-            conn.execute("INSERT INTO subjects (name, description, created_by) VALUES (?, ?, ?)",
-                        (name, description, created_by))
+            conn.execute("INSERT INTO subjects (name, description, created_by, year, code) VALUES (?, ?, ?, ?, ?)",
+                        (name, description, created_by, year, code))
             conn.commit()
             return True
         except sqlite3.IntegrityError:
@@ -24,9 +24,9 @@ class Subject:
     def get_all_subjects():
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('''SELECT subjects.id, subjects.name, subjects.description, subjects.created_by, subjects.created_at, COALESCE(users.username, 'System') as creator_name 
+        cursor.execute('''SELECT subjects.id, subjects.name, subjects.description, subjects.created_by, subjects.created_at, subjects.year, subjects.code, COALESCE(users.username, 'System') as creator_name 
                           FROM subjects LEFT JOIN users ON subjects.created_by = users.id
-                          ORDER BY subjects.name''')
+                          ORDER BY subjects.year, subjects.name''')
         subjects = cursor.fetchall()
         conn.close()
         
@@ -39,7 +39,9 @@ class Subject:
                 'description': subject[2],
                 'created_by': subject[3],
                 'created_at': subject[4],
-                'creator_name': subject[5]
+                'year': subject[5],
+                'code': subject[6],
+                'creator_name': subject[7]
             }
             subject_dicts.append(subject_dict)
         

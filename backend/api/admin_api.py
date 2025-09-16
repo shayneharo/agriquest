@@ -200,11 +200,13 @@ def create_subject(current_user):
         data = request.get_json()
         name = data.get('name', '').strip()
         description = data.get('description', '').strip()
+        year = data.get('year')
+        code = data.get('code', '').strip()
         
         if not name:
             return jsonify({'error': 'Subject name is required'}), 400
         
-        success = Subject.create_subject(name, description, current_user['id'])
+        success = Subject.create_subject(name, description, current_user['id'], year, code)
         
         if success:
             return jsonify({'message': 'Subject created successfully'}), 201

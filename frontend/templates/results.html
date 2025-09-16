@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Results - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-line me-2"></i>Your Quiz Results</h1>
+            <a href="{{ url_for('quiz.home') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ results|length }}</h3>
+                <p class="mb-0">Quizzes Taken</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ results|map(attribute='score')|sum }}</h3>
+                <p class="mb-0">Total Points</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ "%.1f"|format(results|map(attribute='score')|sum / results|length) }}</h3>
+                <p class="mb-0">Average Score</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{% set passed_count = 0 %}{% for result in results %}{% if result.score >= (result.total_questions * 0.8) %}{% set passed_count = passed_count + 1 %}{% endif %}{% endfor %}{{ passed_count }}</h3>
+                <p class="mb-0">Passed (80%+)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Quiz History</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>
+                            <strong>{{ result.quiz_title }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ result.score }}/{{ result.total_questions }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold">{{ "%.1f"|format((result.score / result.total_questions) * 100) }}%</span>
+                        </td>
+                        <td>
+                            {% set percentage = (result.score / result.total_questions) * 100 %}
+                            {% if percentage >= 80 %}
+                                <span class="badge bg-success">Excellent</span>
+                            {% elif percentage >= 60 %}
+                                <span class="badge bg-warning">Good</span>
+                            {% else %}
+                                <span class="badge bg-danger">Needs Improvement</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ result.timestamp }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
+    <h3 class="text-muted">No Results Yet</h3>
+    <p class="text-muted mb-4">You haven't taken any quizzes yet. Start your learning journey!</p>
+    <a href="{{ url_for('quiz.home') }}" class="btn btn-success btn-lg">
+        <i class="fas fa-play me-2"></i>Take Your First Quiz
+    </a>
+</div>
+{% endif %}
+{% endblock %}

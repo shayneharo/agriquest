@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Student Dashboard</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Message -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h4 class="alert-heading">Welcome, {{ user.full_name if user and user.full_name else (user.username if user else 'Student') }}! 👋</h4>
+                <p class="mb-0">Ready to learn and test your knowledge? Let's get started!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ enrolled_subjects|length if enrolled_subjects else 0 }}</h4>
+                            <p class="card-text">Enrolled Subjects</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-book fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ completed_quizzes|length if completed_quizzes else 0 }}</h4>
+                            <p class="card-text">Quizzes Completed</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ average_score if average_score else 0 }}%</h4>
+                            <p class="card-text">Average Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ available_quizzes|length if available_quizzes else 0 }}</h4>
+                            <p class="card-text">Available Quizzes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-question-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('student.my_subjects') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-book"></i> My Subjects
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('student.subjects') }}" class="btn btn-success w-100">
+                                <i class="fas fa-search"></i> Browse Subjects
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('student.my_weaknesses') }}" class="btn btn-info w-100">
+                                <i class="fas fa-chart-line"></i> My Weaknesses
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('quiz.quiz_results') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-history"></i> Quiz History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Quizzes -->
+    {% if upcoming_quizzes %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upcoming Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    {% for quiz in upcoming_quizzes %}
+                    <div class="alert alert-info">
+                        <strong>{{ quiz.title }}</strong> - {{ quiz.subject_name }}<br>
+                        <small class="text-muted">
+                            Deadline: {{ quiz.deadline }} | 
+                            Time Limit: {{ quiz.time_limit }} minutes
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

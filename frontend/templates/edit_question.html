@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Question - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Question
+                    </h4>
+                    <a href="{{ url_for('quiz.edit_quiz', quiz_id=quiz.id) }}" class="btn btn-dark">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Quiz
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('quiz.update_question', question_id=question.id) }}">
+                    <div class="mb-3">
+                        <label for="question_text" class="form-label">Question Text</label>
+                        <textarea class="form-control" id="question_text" name="question_text" 
+                                  rows="3" required>{{ question.question_text }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="option1" class="form-label">Option A</label>
+                                <input type="text" class="form-control" id="option1" name="option1" 
+                                       value="{{ question.option1 }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="option2" class="form-label">Option B</label>
+                                <input type="text" class="form-control" id="option2" name="option2" 
+                                       value="{{ question.option2 }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="option3" class="form-label">Option C</label>
+                                <input type="text" class="form-control" id="option3" name="option3" 
+                                       value="{{ question.option3 }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="option4" class="form-label">Option D</label>
+                                <input type="text" class="form-control" id="option4" name="option4" 
+                                       value="{{ question.option4 }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="correct_option" class="form-label">Correct Answer</label>
+                        <select class="form-select" id="correct_option" name="correct_option" required>
+                            <option value="1" {% if question.correct_option == 1 %}selected{% endif %}>A</option>
+                            <option value="2" {% if question.correct_option == 2 %}selected{% endif %}>B</option>
+                            <option value="3" {% if question.correct_option == 3 %}selected{% endif %}>C</option>
+                            <option value="4" {% if question.correct_option == 4 %}selected{% endif %}>D</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="explanation" class="form-label">Explanation (Optional)</label>
+                        <textarea class="form-control" id="explanation" name="explanation" 
+                                  rows="2" placeholder="Explain why this is the correct answer...">{{ question.explanation or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Question
+                        </button>
+                        <a href="{{ url_for('quiz.edit_quiz', quiz_id=quiz.id) }}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject.name }} Quizzes - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="fas fa-book me-2"></i>{{ subject.name }}</h1>
+                <p class="text-muted">{{ subject.description }}</p>
+            </div>
+            <a href="{{ url_for('quiz.subjects') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Subjects
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for quiz in quizzes %}
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">{{ quiz.title }}</h5>
+                    <span class="badge bg-{{ 'success' if quiz.difficulty_level == 'beginner' else 'warning' if quiz.difficulty_level == 'intermediate' else 'danger' }}">
+                        {{ quiz.difficulty_level.title() }}
+                    </span>
+                </div>
+                {% if quiz.description %}
+                <p class="card-text text-muted">{{ quiz.description }}</p>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i>Created by {{ quiz.creator_name }}
+                        </small>
+                    </div>
+                    <div class="col-6">
+                        {% if quiz.time_limit > 0 %}
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>{{ quiz.time_limit // 60 }} minutes
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if quiz.deadline %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-times me-1"></i>
+                            Deadline: {{ quiz.deadline.split('T')[0] }} {{ quiz.deadline.split('T')[1][:5] }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        {% set is_open = quiz.deadline is none or (quiz.deadline and quiz.deadline > now) %}
+                        <span class="badge bg-{% if is_open %}success{% else %}danger{% endif %}">
+                            <i class="fas fa-{% if is_open %}check-circle{% else %}times-circle{% endif %} me-1"></i>
+                            {% if is_open %}Open{% else %}Closed{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-auto">
+                    {% set is_open = quiz.deadline is none or (quiz.deadline and quiz.deadline > now) %}
+                    {% if is_open %}
+                    <a href="{{ url_for('quiz.take_quiz', quiz_id=quiz.id) }}" class="btn btn-success">
+                        <i class="fas fa-play me-2"></i>Take Quiz
+                    </a>
+                    {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-times me-2"></i>Quiz Closed
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not quizzes %}
+<div class="text-center py-5">
+    <i class="fas fa-question-circle fa-4x text-muted mb-4"></i>
+    <h3 class="text-muted">No Quizzes Available</h3>
+    <p class="text-muted">There are no quizzes for this subject yet.</p>
+    <a href="{{ url_for('quiz.subjects') }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Subjects
+    </a>
+</div>
+{% endif %}
+{% endblock %}

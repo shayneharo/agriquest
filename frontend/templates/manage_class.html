@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Class - {{ class_info.name }} - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-cog text-primary me-2"></i>
+                        Manage Class: {{ class_info.name }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Review and approve student enrollment requests
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('classes.view_classes') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Classes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Class Information -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-book me-2"></i>{{ class_info.name }}
+                            </h5>
+                            {% if class_info.description %}
+                            <p class="card-text text-muted">{{ class_info.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="mb-2">
+                                <span class="badge bg-info">
+                                    <i class="fas fa-users me-1"></i>{{ class_info.teacher_count }} teacher{{ 's' if class_info.teacher_count != 1 else '' }}
+                                </span>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Created {{ class_info.created_at.split(' ')[0] if class_info.created_at else 'Unknown' }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Pending Enrollments -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-clock me-2"></i>
+                                Pending Approvals
+                                <span class="badge bg-dark ms-2">{{ pending_enrollments|length }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if pending_enrollments %}
+                                {% for enrollment in pending_enrollments %}
+                                <div class="border rounded p-3 mb-3 bg-light">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user me-1"></i>{{ enrollment.username }}
+                                            </h6>
+                                            <p class="text-muted mb-1">
+                                                <i class="fas fa-envelope me-1"></i>{{ enrollment.email }}
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                Requested {{ enrollment.requested_at.split(' ')[0] if enrollment.requested_at else 'Unknown' }}
+                                            </small>
+                                        </div>
+                                        <div class="ms-3">
+                                            <div class="btn-group-vertical" role="group">
+                                                <form method="POST" action="{{ url_for('classes.approve_student', class_id=class_info.id, student_id=enrollment.student_id) }}" style="display: inline;">
+                                                    <button type="submit" class="btn btn-success btn-sm mb-1" 
+                                                            onclick="return confirm('Approve {{ enrollment.username }} for this class?')">
+                                                        <i class="fas fa-check me-1"></i>Approve
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('classes.reject_student', class_id=class_info.id, student_id=enrollment.student_id) }}" style="display: inline;">
+                                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                                            onclick="return confirm('Reject {{ enrollment.username }} enrollment request?')">
+                                                        <i class="fas fa-times me-1"></i>Reject
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <h6 class="text-muted">No Pending Requests</h6>
+                                    <p class="text-muted mb-0">All enrollment requests have been processed.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approved Students -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Enrolled Students
+                                <span class="badge bg-light text-dark ms-2">{{ approved_students|length }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if approved_students %}
+                                {% for student in approved_students %}
+                                <div class="border rounded p-3 mb-3 bg-light">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user-check me-1 text-success"></i>{{ student.username }}
+                                            </h6>
+                                            <p class="text-muted mb-1">
+                                                <i class="fas fa-envelope me-1"></i>{{ student.email }}
+                                            </p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                Approved {{ student.approved_at.split(' ')[0] if student.approved_at else 'Unknown' }}
+                                            </small>
+                                        </div>
+                                        <div class="ms-3">
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Enrolled
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">No Enrolled Students</h6>
+                                    <p class="text-muted mb-0">No students have been approved for this class yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-tools me-2"></i>Quick Actions
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <a href="{{ url_for('quiz.create_quiz') }}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-plus me-1"></i>Create Quiz
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <a href="{{ url_for('quiz.view_quizzes_for_subject', subject_id=10, class_id=class_info.id) }}" class="btn btn-outline-info w-100">
+                                        <i class="fas fa-list me-1"></i>View Quizzes
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <a href="{{ url_for('analytics.analytics') }}" class="btn btn-outline-success w-100">
+                                        <i class="fas fa-chart-bar me-1"></i>Analytics
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.btn-outline-primary {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.btn-outline-info {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-outline-info:hover {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+}
+
+.btn-outline-success {
+    color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-outline-success:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.text-primary {
+    color: #007bff !important;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

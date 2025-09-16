@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Register - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+                    <h2 class="card-title">Join AgriQuest</h2>
+                    <p class="text-muted">Create your account to start learning about agriculture</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Email-Only Registration:</strong> Perfect for testing with friends!
+                    </div>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                    </div>
+
+                    <!-- Email verification only -->
+                    <div class="mb-4">
+                        <label class="form-label">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" required>
+                            <button type="button" class="btn btn-outline-success" id="sendEmailOTP">
+                                <i class="fas fa-paper-plane me-1"></i>Send OTP
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="role" class="form-label">Role</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="">Choose your role</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+
+                    <!-- OTP Verification Section -->
+                    <div class="mb-4" id="otpSection" style="display: none;">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-shield-alt me-2"></i>Email OTP Verification
+                                    <span class="badge bg-light text-dark ms-2" id="otpTimer">3:00</span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="email_otp" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i>Email OTP Code
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                        <input type="text" class="form-control text-center" id="email_otp" name="email_otp" 
+                                               maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+                                        <button type="button" class="btn btn-success" id="verifyOTP" disabled>
+                                            <i class="fas fa-check me-1"></i>Verify OTP
+                                        </button>
+                                    </div>
+                                    <div class="form-text text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>Enter the 6-digit OTP code sent to your email
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" disabled>
+                            <i class="fas fa-lock me-2"></i>Verify OTP to Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="mb-0">Already have an account? 
+                        <a href="{{ url_for('auth.login') }}" class="text-success text-decoration-none">
+                            <strong>Sign in here</strong>
+                        </a>
+                    </p>
+                    <p class="mt-2">
+                        <a href="{{ url_for('auth.register') }}" class="text-muted text-decoration-none">
+                            <small>Use full registration (Email + Phone)</small>
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sendEmailOTPBtn = document.getElementById('sendEmailOTP');
+    const otpSection = document.getElementById('otpSection');
+    const emailOTPField = document.getElementById('email_otp');
+    const verifyOTPBtn = document.getElementById('verifyOTP');
+    const otpTimer = document.getElementById('otpTimer');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    let otpTimerInterval = null;
+    let timeLeft = 180; // 3 minutes in seconds
+    
+    // Send Email OTP
+    sendEmailOTPBtn.addEventListener('click', function() {
+        const email = document.getElementById('email').value;
+        
+        if (!email) {
+            showMessage('Please enter your email address first.', 'error');
+            return;
+        }
+        
+        otpSection.style.display = 'block';
+        emailOTPField.value = '';
+        sendEmailOTPBtn.disabled = true;
+        
+        fetch('/send_email_otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('OTP sent to your email! Check your inbox.', 'success');
+                startTimer();
+                verifyOTPBtn.disabled = false;
+            } else {
+                showMessage(data.message || 'Failed to send OTP', 'error');
+                sendEmailOTPBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error sending OTP', 'error');
+            sendEmailOTPBtn.disabled = false;
+        });
+    });
+    
+    // Verify OTP
+    verifyOTPBtn.addEventListener('click', function() {
+        const emailOTPValue = emailOTPField.value.trim();
+        
+        if (emailOTPValue.length === 6) {
+            clearInterval(otpTimerInterval);
+            verifyOTPBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verified!';
+            verifyOTPBtn.className = 'btn btn-success';
+            verifyOTPBtn.disabled = true;
+            
+            // Enable form submission
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Create Account';
+            
+            showMessage('OTP verified! You can now create your account.', 'success');
+        } else {
+            showMessage('Please enter a valid 6-digit OTP code.', 'error');
+        }
+    });
+    
+    function startTimer() {
+        timeLeft = 180;
+        updateTimerDisplay();
+        
+        otpTimerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(otpTimerInterval);
+                emailOTPField.value = '';
+                verifyOTPBtn.disabled = true;
+                sendEmailOTPBtn.disabled = false;
+                showMessage('OTP expired! Please request a new one.', 'warning');
+            }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        otpTimer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 30) {
+            otpTimer.className = 'badge bg-danger text-white ms-2';
+        } else if (timeLeft <= 60) {
+            otpTimer.className = 'badge bg-warning text-dark ms-2';
+        } else {
+            otpTimer.className = 'badge bg-light text-dark ms-2';
+        }
+    }
+    
+    function showMessage(message, type) {
+        const existingAlert = document.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const form = document.querySelector('form');
+        form.parentNode.insertBefore(alertDiv, form.nextSibling);
+        
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}
+

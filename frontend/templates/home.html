@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Home - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Student Dashboard -->
+    {% if user_role == 'student' %}
+    <div class="row">
+        <div class="col-12">
+            <!-- Welcome Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-seedling text-success me-3"></i>
+                    Hi, {{ user_full_name }} 👋
+                </h1>
+                <p class="lead text-muted">
+                    Welcome to your learning dashboard! Track your progress and discover new quizzes.
+                </p>
+            </div>
+
+            <!-- My Classes Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-4"><i class="fas fa-graduation-cap me-2"></i>My Classes</h3>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="mb-3">
+                                        <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title">Enroll in Classes</h5>
+                                    <p class="card-text text-muted">Enroll in classes to access quizzes and start learning</p>
+                                    <div class="mt-auto">
+                                        <a href="{{ url_for('classes.my_classes') }}" class="btn btn-primary w-100">
+                                            <i class="fas fa-plus me-2"></i>Enroll Now
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Quizzes -->
+            {% if upcoming_quizzes %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-4"><i class="fas fa-clock me-2"></i>Upcoming Quizzes</h3>
+                    <div class="row g-3">
+                        {% for quiz in upcoming_quizzes %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">{{ quiz.title }}</h6>
+                                        <span class="badge bg-warning text-dark">{{ quiz.difficulty_level.title() }}</span>
+                                    </div>
+                                    <p class="card-text small text-muted mb-2">{{ quiz.subject_name }}</p>
+                                    <p class="card-text small mb-3">{{ quiz.description[:100] }}{% if quiz.description|length > 100 %}...{% endif %}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-times me-1"></i>
+                                            Due: {{ quiz.deadline.split('T')[0] }} {{ quiz.deadline.split('T')[1][:5] }}
+                                        </small>
+                                        <a href="{{ url_for('quiz.take_quiz', quiz_id=quiz.id) }}" 
+                                           class="btn btn-warning btn-sm">
+                                            <i class="fas fa-play me-1"></i>Take Quiz
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title mb-4">
+                                <i class="fas fa-bolt me-2"></i>Quick Actions
+                            </h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <a href="{{ url_for('quiz.view_results') }}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-history me-2"></i>View My History
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{{ url_for('profile.view_profile') }}" class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-user me-2"></i>My Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard -->
+    {% elif user_role in ['teacher', 'admin'] %}
+    <div class="row">
+        <div class="col-12">
+            <!-- Welcome Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-chalkboard-teacher text-primary me-3"></i>
+                    Welcome, {{ user_full_name }}!
+                </h1>
+                <p class="lead text-muted">
+                    Manage your classes, create quizzes, and monitor student performance.
+                </p>
+            </div>
+
+            <!-- My Classes Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-4"><i class="fas fa-chalkboard me-2"></i>My Classes</h3>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="mb-3">
+                                        <i class="fas fa-chalkboard-teacher fa-3x text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title">Manage My Classes</h5>
+                                    <p class="card-text text-muted">View and manage your assigned classes</p>
+                                    <div class="mt-auto">
+                                        <a href="{{ url_for('classes.my_classes') }}" class="btn btn-primary w-100">
+                                            <i class="fas fa-eye me-2"></i>View My Classes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Enrollment Requests -->
+            {% if pending_requests %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-4">
+                        <i class="fas fa-user-check me-2"></i>Pending Enrollment Requests
+                        <span class="badge bg-warning ms-2">{{ pending_requests|length }}</span>
+                    </h3>
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Class</th>
+                                            <th>Requested</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for request in pending_requests[:5] %}
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ request.full_name or request.username }}</strong>
+                                                    <br><small class="text-muted">{{ request.email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>{{ request.class_name }}</td>
+                                            <td>{{ request.requested_at[:10] if request.requested_at else 'N/A' }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('classes.approve_enrollment', student_id=request.student_id, class_id=request.class_id) }}" 
+                                                       class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('classes.reject_enrollment', student_id=request.student_id, class_id=request.class_id) }}" 
+                                                       class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if pending_requests|length > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('classes.enrollment_requests') }}" class="btn btn-outline-warning">
+                                    View All Requests ({{ pending_requests|length }})
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Quizzes Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Recent Quizzes</h3>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="mb-3">
+                                        <i class="fas fa-cogs fa-3x text-info"></i>
+                                    </div>
+                                    <h5 class="card-title">Manage Quizzes</h5>
+                                    <p class="card-text text-muted">Create, edit, and organize your quizzes</p>
+                                    <div class="mt-auto">
+                                        <a href="{{ url_for('admin.manage_subjects') }}" class="btn btn-info w-100">
+                                            <i class="fas fa-cogs me-2"></i>Manage Quizzes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if recent_quizzes %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title">Latest Quiz</h6>
+                                    {% set latest_quiz = recent_quizzes[0] %}
+                                    <p class="card-text small text-muted mb-2">{{ latest_quiz.subject_name }}</p>
+                                    <p class="card-text small mb-3">{{ latest_quiz.title }}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ latest_quiz.time_limit // 60 }} min
+                                        </small>
+                                        <span class="badge bg-{{ 'success' if latest_quiz.difficulty_level == 'beginner' else 'warning' if latest_quiz.difficulty_level == 'intermediate' else 'danger' }}">
+                                            {{ latest_quiz.difficulty_level.title() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="card-title mb-4">
+                                <i class="fas fa-bolt me-2"></i>Quick Actions
+                            </h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <a href="{{ url_for('quiz.create_quiz') }}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-plus me-2"></i>Create New Quiz
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{{ url_for('analytics.analytics') }}" class="btn btn-outline-success w-100">
+                                        <i class="fas fa-chart-line me-2"></i>View Analytics
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fallback for unknown roles -->
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-seedling text-success me-3"></i>
+                    Welcome to AgriQuest
+                </h1>
+                <p class="lead text-muted">
+                    Your agricultural learning platform for interactive quizzes and knowledge growth.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

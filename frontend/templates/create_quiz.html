@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Create Quiz - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Quiz</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="quizForm">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Quiz Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="subject_id" class="form-label">Subject</label>
+                            <select class="form-select" id="subject_id" name="subject_id" required>
+                                <option value="">Select a subject</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="difficulty_level" class="form-label">Difficulty</label>
+                            <select class="form-select" id="difficulty_level" name="difficulty_level">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="time_limit" class="form-label">Time Limit (minutes)</label>
+                            <input type="number" class="form-control" id="time_limit" name="time_limit" value="10" min="1">
+                            <small class="text-muted">Default: 10 minutes</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="deadline" class="form-label">Deadline (Optional)</label>
+                            <input type="datetime-local" class="form-control" id="deadline" name="deadline">
+                            <small class="text-muted">Leave empty for no deadline</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="question_count" class="form-label">Number of Questions</label>
+                        <select class="form-select" id="question_count" name="question_count" onchange="generateQuestions()">
+                            <option value="1">1 Question</option>
+                            <option value="2">2 Questions</option>
+                            <option value="3">3 Questions</option>
+                            <option value="4">4 Questions</option>
+                            <option value="5" selected>5 Questions</option>
+                            <option value="10">10 Questions</option>
+                        </select>
+                    </div>
+
+                    <div id="questions-container">
+                        <!-- Questions will be generated here -->
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('quiz.home') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Create Quiz
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateQuestions() {
+    const count = parseInt(document.getElementById('question_count').value);
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+
+    for (let i = 1; i <= count; i++) {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'card mb-4';
+        questionDiv.innerHTML = `
+            <div class="card-header">
+                <h6 class="mb-0">Question ${i}</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Question Text</label>
+                    <textarea class="form-control" name="question_${i}" rows="2" required></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Option 1</label>
+                            <input type="text" class="form-control" name="question_${i}_option1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Option 2</label>
+                            <input type="text" class="form-control" name="question_${i}_option2" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Option 3</label>
+                            <input type="text" class="form-control" name="question_${i}_option3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Option 4</label>
+                            <input type="text" class="form-control" name="question_${i}_option4" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Correct Answer</label>
+                    <select class="form-select" name="question_${i}_correct" required>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                        <option value="3">Option 3</option>
+                        <option value="4">Option 4</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        container.appendChild(questionDiv);
+    }
+}
+
+// Generate initial questions
+generateQuestions();
+</script>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Quiz - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Quiz: {{ quiz.title }}
+                    </h4>
+                    <a href="{{ url_for('quiz.view_quizzes_for_subject', subject_id=quiz.subject_id) }}" class="btn btn-dark">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Quizzes
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('quiz.update_quiz', quiz_id=quiz.id) }}">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Quiz Title</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{ quiz.title }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" 
+                                          rows="3">{{ quiz.description or '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="difficulty_level" class="form-label">Difficulty Level</label>
+                                <select class="form-select" id="difficulty_level" name="difficulty_level">
+                                    <option value="beginner" {% if quiz.difficulty_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                    <option value="intermediate" {% if quiz.difficulty_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                    <option value="advanced" {% if quiz.difficulty_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="time_limit" class="form-label">Time Limit (minutes)</label>
+                                <input type="number" class="form-control" id="time_limit" name="time_limit" 
+                                       value="{{ quiz.time_limit // 60 }}" min="1" max="120">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="deadline" class="form-label">Deadline (Optional)</label>
+                                <input type="datetime-local" class="form-control" id="deadline" name="deadline" 
+                                       value="{{ quiz.deadline.split('T')[0] + 'T' + quiz.deadline.split('T')[1][:5] if quiz.deadline else '' }}">
+                                <small class="text-muted">Leave empty for no deadline</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Quiz
+                        </button>
+                        <a href="{{ url_for('quiz.view_quizzes_for_subject', subject_id=quiz.subject_id) }}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Questions Section -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>Quiz Questions ({{ questions|length }})
+                    </h5>
+                    <a href="{{ url_for('quiz.add_question', quiz_id=quiz.id) }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add Question
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if questions %}
+                    <div class="accordion" id="questionsAccordion">
+                        {% for question in questions %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ question.id }}">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#collapse{{ question.id }}" 
+                                        aria-expanded="false" aria-controls="collapse{{ question.id }}">
+                                    <strong>Question {{ loop.index }}:</strong> {{ question.question_text[:50] }}{% if question.question_text|length > 50 %}...{% endif %}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ question.id }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ question.id }}" data-bs-parent="#questionsAccordion">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <strong>Question:</strong>
+                                        <p class="mt-1">{{ question.question_text }}</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>Options:</strong>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" disabled 
+                                                           {% if question.correct_option == 1 %}checked{% endif %}>
+                                                    <label class="form-check-label {% if question.correct_option == 1 %}text-success fw-bold{% endif %}">
+                                                        A) {{ question.option1 }}
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" disabled 
+                                                           {% if question.correct_option == 2 %}checked{% endif %}>
+                                                    <label class="form-check-label {% if question.correct_option == 2 %}text-success fw-bold{% endif %}">
+                                                        B) {{ question.option2 }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" disabled 
+                                                           {% if question.correct_option == 3 %}checked{% endif %}>
+                                                    <label class="form-check-label {% if question.correct_option == 3 %}text-success fw-bold{% endif %}">
+                                                        C) {{ question.option3 }}
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" disabled 
+                                                           {% if question.correct_option == 4 %}checked{% endif %}>
+                                                    <label class="form-check-label {% if question.correct_option == 4 %}text-success fw-bold{% endif %}">
+                                                        D) {{ question.option4 }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if question.explanation %}
+                                    <div class="mb-3">
+                                        <strong>Explanation:</strong>
+                                        <p class="mt-1 text-muted">{{ question.explanation }}</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Correct Answer: {{ ['A', 'B', 'C', 'D'][question.correct_option - 1] }}
+                                        </span>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('quiz.edit_question', question_id=question.id) }}" 
+                                               class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit me-1"></i>Edit
+                                            </a>
+                                            <a href="{{ url_for('quiz.delete_question', question_id=question.id) }}" 
+                                               class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Are you sure you want to delete this question? This action cannot be undone.')">
+                                                <i class="fas fa-trash me-1"></i>Delete
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-question-circle fa-2x text-muted mb-3"></i>
+                        <h6 class="text-muted">No questions found</h6>
+                        <p class="text-muted">This quiz doesn't have any questions yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

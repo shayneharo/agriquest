@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </h4>
+                    <a href="{{ url_for('profile.view_profile') }}" class="btn btn-dark">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Profile
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('profile.edit_profile') }}" enctype="multipart/form-data">
+                    <!-- Profile Picture Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="text-center">
+                                <div class="profile-picture-preview mb-3">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                             alt="Profile Picture" 
+                                             class="profile-picture-large"
+                                             id="profilePicturePreview">
+                                    {% else %}
+                                        <div class="profile-picture-placeholder" id="profilePicturePreview">
+                                            <i class="fas fa-user fa-3x"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile_picture" class="form-label">
+                                        <i class="fas fa-camera me-1"></i>Profile Picture
+                                    </label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="profile_picture" 
+                                           name="profile_picture" 
+                                           accept="image/*"
+                                           onchange="previewImage(this)">
+                                    <div class="form-text">
+                                        Upload a profile picture (PNG, JPG, JPEG, GIF, or WebP). Max size: 5MB
+                                    </div>
+                                </div>
+                                {% if user.profile_picture %}
+                                <div class="mb-3">
+                                    <form method="POST" action="{{ url_for('profile.delete_profile_picture') }}" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete your profile picture?')">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash me-1"></i>Delete Current Picture
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="full_name" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Full Name *
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="full_name" 
+                                       name="full_name" 
+                                       value="{{ user.full_name or '' }}" 
+                                       required
+                                       placeholder="Enter your full name">
+                                <div class="form-text">This will be displayed on your profile</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-at me-1"></i>Username
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       value="{{ user.username }}" 
+                                       disabled>
+                                <div class="form-text">Username cannot be changed</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Email Address
+                                </label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       name="email" 
+                                       value="{{ user.email or '' }}" 
+                                       placeholder="Enter your email address">
+                                <div class="form-text">Used for notifications and account recovery</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">
+                                    <i class="fas fa-user-tag me-1"></i>Role
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="role" 
+                                       value="{{ user.role.title() }}" 
+                                       disabled>
+                                <div class="form-text">Role cannot be changed</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_joined" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>Date Joined
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="date_joined" 
+                                       value="{{ user.created_at.split(' ')[0] if user.created_at else 'Unknown' }}" 
+                                       disabled>
+                                <div class="form-text">When you joined the platform</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('profile.view_profile') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Profile Information Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Full Name</h6>
+                        <p class="text-muted">Your full name as it will appear on your profile and in communications.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Email Address</h6>
+                        <p class="text-muted">Used for important notifications and account recovery. Make sure it's valid.</p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Phone Number</h6>
+                        <p class="text-muted">Used for OTP verification during login and password reset. Include country code.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Username & Role</h6>
+                        <p class="text-muted">Your username and role cannot be changed. Contact support if you need assistance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-picture-preview {
+    display: inline-block;
+    position: relative;
+}
+
+.profile-picture-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #007bff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.profile-picture-placeholder {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #007bff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.profile-picture-preview img {
+    transition: transform 0.3s ease;
+}
+
+.profile-picture-preview:hover img {
+    transform: scale(1.05);
+}
+
+#profile_picture {
+    max-width: 300px;
+    margin: 0 auto;
+}
+</style>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const preview = document.getElementById('profilePicturePreview');
+            
+            // Create new image element
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = 'Profile Picture Preview';
+            img.className = 'profile-picture-large';
+            
+            // Replace the preview content
+            preview.innerHTML = '';
+            preview.appendChild(img);
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// File size validation
+document.getElementById('profile_picture').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            alert('File size too large. Maximum size is 5MB.');
+            e.target.value = '';
+            return;
+        }
+        
+        // Check file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Invalid file type. Please upload a valid image (PNG, JPG, JPEG, GIF, or WebP).');
+            e.target.value = '';
+            return;
+        }
+    }
+});
+</script>
+{% endblock %}

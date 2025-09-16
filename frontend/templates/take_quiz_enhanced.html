@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block title %}Take Quiz - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Quiz Header -->
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-question-circle me-2"></i>{{ quiz.title }}</h4>
+                    <div class="d-flex align-items-center">
+                        <!-- Timer -->
+                        <div class="timer-container me-3">
+                            <i class="fas fa-clock me-1"></i>
+                            <span class="me-2">10 min</span>
+                            <span id="timer" class="fw-bold">10:00</span>
+                        </div>
+                        <!-- Progress -->
+                        <div class="progress-container">
+                            <span class="me-2">Question <span id="current-q">{{ current_question }}</span> of {{ total_questions }}</span>
+                            <div class="progress" style="width: 200px; height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ (current_question / total_questions) * 100 }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Question Navigation Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Question Navigation</h6>
+                </div>
+                <div class="card-body">
+                    <div class="question-grid">
+                        {% for i in range(1, total_questions + 1) %}
+                        <button type="button" 
+                                class="btn btn-sm question-nav-btn {% if i == current_question %}btn-primary{% elif i in session.quiz_answers %}btn-info{% elif i in session.flagged_questions %}btn-warning{% else %}btn-outline-secondary{% endif %}"
+                                onclick="goToQuestion({{ i }})"
+                                id="nav-btn-{{ i }}">
+                            {{ i }}
+                            {% if i in session.quiz_answers %}
+                                <i class="fas fa-check ms-1"></i>
+                            {% elif i in session.flagged_questions %}
+                                <i class="fas fa-flag ms-1"></i>
+                            {% endif %}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <div class="legend">
+                        <small>
+                            <span class="badge bg-primary me-1">Current</span>
+                            <span class="badge bg-info me-1">Answered</span>
+                            <span class="badge bg-warning me-1">Flagged</span>
+                            <span class="badge bg-secondary">Unanswered</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Question Area -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Question {{ current_question }}</h5>
+                    <div>
+                        <button type="button" 
+                                class="btn btn-sm {% if questions[current_question-1].id in session.flagged_questions %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                                onclick="flagQuestion()">
+                            <i class="fas fa-flag me-1"></i>
+                            {% if questions[current_question-1].id in session.flagged_questions %}Unflag{% else %}Flag{% endif %}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="quizForm">
+                        <input type="hidden" name="current_question" value="{{ current_question }}">
+                        
+                        <div class="question-content mb-4">
+                            <h6 class="question-text">{{ questions[current_question-1].question_text }}</h6>
+                        </div>
+
+                        <div class="options">
+                            {% set question = questions[current_question-1] %}
+                            {% set saved_answer = session.quiz_answers.get(question.id, '') %}
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" 
+                                       id="option1" value="1" 
+                                       {% if saved_answer == 1 %}checked{% endif %}>
+                                <label class="form-check-label" for="option1">
+                                    A) {{ question.option1 }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" 
+                                       id="option2" value="2" 
+                                       {% if saved_answer == 2 %}checked{% endif %}>
+                                <label class="form-check-label" for="option2">
+                                    B) {{ question.option2 }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" 
+                                       id="option3" value="3" 
+                                       {% if saved_answer == 3 %}checked{% endif %}>
+                                <label class="form-check-label" for="option3">
+                                    C) {{ question.option3 }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="question_{{ question.id }}" 
+                                       id="option4" value="4" 
+                                       {% if saved_answer == 4 %}checked{% endif %}>
+                                <label class="form-check-label" for="option4">
+                                    D) {{ question.option4 }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                {% if current_question > 1 %}
+                                <button type="submit" name="prev_question" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Previous
+                                </button>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                {% if current_question < total_questions %}
+                                <button type="submit" name="next_question" class="btn btn-primary">
+                                    Next <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                                {% else %}
+                                <button type="submit" name="submit_quiz" class="btn btn-success" 
+                                        onclick="return confirm('Are you sure you want to submit the quiz?')">
+                                    <i class="fas fa-check me-1"></i>Submit Quiz
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.question-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.question-nav-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.question-nav-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.question-nav-btn.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #20c997);
+    border: none;
+    color: white;
+    box-shadow: 0 2px 4px rgba(23, 162, 184, 0.3);
+}
+
+.question-nav-btn.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.question-nav-btn.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    border: none;
+    color: white;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+}
+
+.question-nav-btn.btn-primary {
+    background: linear-gradient(135deg, #007bff, #6610f2);
+    border: none;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.timer-container {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+}
+
+.question-content {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #007bff;
+}
+
+.options .form-check {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.options .form-check:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.options .form-check-input:checked + .form-check-label {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.options .form-check:has(.form-check-input:checked) {
+    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.options .form-check:has(.form-check-input:checked)::before {
+    content: "✓";
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: #007bff;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.legend {
+    text-align: center;
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .question-content {
+    background: #2d3748;
+    border-left-color: #4299e1;
+}
+
+[data-bs-theme="dark"] .options .form-check {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+[data-bs-theme="dark"] .options .form-check:hover {
+    background: #4a5568;
+    border-color: #4299e1;
+}
+
+[data-bs-theme="dark"] .options .form-check:has(.form-check-input:checked) {
+    background: linear-gradient(135deg, #1a365d, #2d3748);
+    border-color: #4299e1;
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+/* Button animations */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+</style>
+
+<script>
+// Initialize timer from session storage or default to 10 minutes
+let timeLeft = parseInt(sessionStorage.getItem('quiz_time_left')) || 600; // 10 minutes in seconds
+
+// Only reset timer if this is the very first time starting the quiz
+if ({{ current_question }} === 1 && !sessionStorage.getItem('quiz_timer_started')) {
+    timeLeft = 600;
+    sessionStorage.setItem('quiz_time_left', '600');
+    sessionStorage.setItem('quiz_timer_started', 'true');
+}
+let timerInterval;
+
+function startTimer() {
+    timerInterval = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const timerElement = document.getElementById('timer');
+    
+    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Save current time to session storage
+    sessionStorage.setItem('quiz_time_left', timeLeft.toString());
+    
+    if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('quiz_time_left'); // Clear timer from storage
+        alert('Time\'s up! The quiz will be submitted automatically.');
+        document.getElementById('quizForm').submit();
+        return;
+    }
+    
+    // Change color when time is running low
+    if (timeLeft <= 60) {
+        timerElement.style.color = '#dc3545';
+    } else if (timeLeft <= 180) {
+        timerElement.style.color = '#ffc107';
+    }
+    
+    timeLeft--;
+}
+
+function goToQuestion(questionNum) {
+    // Save current answer before navigating
+    const currentForm = document.getElementById('quizForm');
+    const formData = new FormData(currentForm);
+    
+    // Create a temporary form to submit
+    const tempForm = document.createElement('form');
+    tempForm.method = 'POST';
+    tempForm.style.display = 'none';
+    
+    // Add current question data
+    formData.forEach((value, key) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        tempForm.appendChild(input);
+    });
+    
+    // Add navigation data
+    const navInput = document.createElement('input');
+    navInput.type = 'hidden';
+    navInput.name = 'current_question';
+    navInput.value = {{ current_question }};
+    tempForm.appendChild(navInput);
+    
+    const nextInput = document.createElement('input');
+    nextInput.type = 'hidden';
+    nextInput.name = 'next_question';
+    nextInput.value = '1';
+    tempForm.appendChild(nextInput);
+    
+    document.body.appendChild(tempForm);
+    tempForm.submit();
+}
+
+function flagQuestion() {
+    const currentForm = document.getElementById('quizForm');
+    const formData = new FormData(currentForm);
+    
+    // Create a temporary form to submit
+    const tempForm = document.createElement('form');
+    tempForm.method = 'POST';
+    tempForm.style.display = 'none';
+    
+    // Add current question data
+    formData.forEach((value, key) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        tempForm.appendChild(input);
+    });
+    
+    // Add flag data
+    const flagInput = document.createElement('input');
+    flagInput.type = 'hidden';
+    flagInput.name = 'flag_question';
+    flagInput.value = '1';
+    tempForm.appendChild(flagInput);
+    
+    document.body.appendChild(tempForm);
+    tempForm.submit();
+}
+
+// Start timer when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startTimer();
+});
+
+// Clear timer when quiz is submitted
+document.addEventListener('submit', function(e) {
+    if (e.target.id === 'quizForm' && e.submitter.name === 'submit_quiz') {
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('quiz_time_left');
+        sessionStorage.removeItem('quiz_timer_started');
+    }
+});
+
+// Clear timer when user navigates away from quiz
+window.addEventListener('beforeunload', function(e) {
+    if (document.getElementById('quizForm')) {
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('quiz_time_left');
+    }
+});
+
+// Auto-save answers as user selects them and update navigation
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'radio' && e.target.name.startsWith('question_')) {
+        // Update the navigation button for current question
+        updateNavigationButton({{ current_question }});
+        
+        // Save answer to session
+        const questionId = e.target.name.replace('question_', '');
+        if (typeof(Storage) !== "undefined") {
+            let answers = JSON.parse(sessionStorage.getItem('quiz_answers') || '{}');
+            answers[questionId] = e.target.value;
+            sessionStorage.setItem('quiz_answers', JSON.stringify(answers));
+        }
+    }
+});
+
+function updateNavigationButton(questionNum) {
+    const navBtn = document.getElementById(`nav-btn-${questionNum}`);
+    if (navBtn) {
+        // Check if current question has an answer
+        const currentQuestion = document.querySelector(`input[name^="question_"]:checked`);
+        if (currentQuestion) {
+            // Add smooth transition
+            navBtn.style.transition = 'all 0.3s ease';
+            navBtn.className = navBtn.className.replace(/btn-\w+/, 'btn-info');
+            if (!navBtn.querySelector('.fas.fa-check')) {
+                navBtn.innerHTML = `${questionNum} <i class="fas fa-check ms-1"></i>`;
+            }
+            // Add a subtle animation
+            navBtn.style.animation = 'pulse 0.6s ease-in-out';
+        }
+    }
+}
+
+// Add pulse animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+
+// Warn before leaving page only if there are unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    // Only warn if there are unsaved answers and time is still remaining
+    const hasUnsavedAnswers = document.querySelector('input[type="radio"]:checked');
+    if (timeLeft > 0 && hasUnsavedAnswers && !e.target.activeElement?.type?.includes('submit')) {
+        e.preventDefault();
+        e.returnValue = 'Are you sure you want to leave? Your progress will be lost.';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Profile Header -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>My Profile
+                    </h4>
+                    <a href="{{ url_for('profile.edit_profile') }}" class="btn btn-light">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="profile-avatar mb-3">
+                            {% if user.profile_picture %}
+                                <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                     alt="Profile Picture" 
+                                     class="profile-picture-display">
+                            {% else %}
+                                <div class="avatar-circle mx-auto">
+                                    {{ user.full_name[0].upper() if user.full_name else user.username[0].upper() }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="mb-1">{{ user.full_name or user.username }}</h5>
+                        <p class="text-muted mb-0">{{ user.role.title() }}</p>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted">Full Name:</label>
+                                    <p class="mb-0">{{ user.full_name or 'Not set' }}</p>
+                                </div>
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted">Username:</label>
+                                    <p class="mb-0">{{ user.username }}</p>
+                                </div>
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted">Email:</label>
+                                    <p class="mb-0">{{ user.email or 'Not set' }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted">Email:</label>
+                                    <p class="mb-0">{{ user.email or 'Not set' }}</p>
+                                </div>
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted">Date Joined:</label>
+                                    <p class="mb-0">{{ user.created_at.split(' ')[0] if user.created_at else 'Unknown' }}</p>
+                                </div>
+                                <div class="info-item mb-3">
+                                    <label class="fw-bold text-muted">Member Since:</label>
+                                    <p class="mb-0">
+                                        {% if user.created_at %}
+                                            {% set days = (now() - user.created_at).days %}
+                                            {% if days < 30 %}
+                                                {{ days }} day{{ 's' if days != 1 else '' }} ago
+                                            {% elif days < 365 %}
+                                                {{ (days // 30) }} month{{ 's' if (days // 30) != 1 else '' }} ago
+                                            {% else %}
+                                                {{ (days // 365) }} year{{ 's' if (days // 365) != 1 else '' }} ago
+                                            {% endif %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Overview -->
+        {% if performance and performance.total_quizzes > 0 %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Performance Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-question-circle fa-2x mb-2"></i>
+                                <h3>{{ performance.total_quizzes }}</h3>
+                                <p class="mb-0">Quizzes Taken</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-percentage fa-2x mb-2"></i>
+                                <h3>{{ performance.avg_score }}%</h3>
+                                <p class="mb-0">Average Score</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-trophy fa-2x mb-2"></i>
+                                <h3>{{ performance.passed_quizzes }}</h3>
+                                <p class="mb-0">Quizzes Passed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                                <h3>{{ performance.pass_rate }}%</h3>
+                                <p class="mb-0">Pass Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Quiz Results -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Quiz Results
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if performance.recent_results %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Quiz</th>
+                                <th>Subject</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in performance.recent_results %}
+                            {% set percentage = (result.score / result.total_questions) * 100 %}
+                            <tr>
+                                <td>
+                                    <strong>{{ result.quiz_title }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ result.difficulty_level.title() }}</small>
+                                </td>
+                                <td>{{ result.subject_name }}</td>
+                                <td>
+                                    <span class="fw-bold">{{ result.score }} / {{ result.total_questions }}</span>
+                                </td>
+                                <td>
+                                    <span class="{% if percentage >= 80 %}text-success{% elif percentage >= 60 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                                        {{ "%.1f"|format(percentage) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if percentage >= 80 %}
+                                        <span class="badge bg-success">Excellent</span>
+                                    {% elif percentage >= 60 %}
+                                        <span class="badge bg-warning">Good</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Needs Improvement</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ result.timestamp.split(' ')[0] if result.timestamp else 'Unknown' }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Quiz Results Yet</h5>
+                    <p class="text-muted">Start taking quizzes to see your performance here!</p>
+                    <a href="{{ url_for('quiz.subjects') }}" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Take a Quiz
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- No Performance Data -->
+        <div class="card mb-4">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Performance Data Yet</h5>
+                <p class="text-muted">Start taking quizzes to see your performance statistics!</p>
+                <a href="{{ url_for('quiz.subjects') }}" class="btn btn-primary">
+                    <i class="fas fa-play me-2"></i>Take Your First Quiz
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Activities -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Activities
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if activities %}
+                <div class="timeline">
+                    {% for activity in activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-{{ activity.color }}">
+                            <i class="{{ activity.icon }}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">{{ activity.description }}</h6>
+                            <p class="text-muted mb-1">{{ activity.details }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ activity.timestamp.split(' ')[0] if activity.timestamp else 'Unknown' }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Recent Activities</h5>
+                    <p class="text-muted">Your activities will appear here as you use the platform.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-avatar .avatar-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 2.5rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.profile-picture-display {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #007bff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.info-item label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Analytics - {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Quiz Analytics: {{ quiz.title }}
+                    </h4>
+                    <a href="{{ url_for('quiz.view_quizzes_for_subject', subject_id=quiz.subject_id) }}" class="btn btn-light">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Quizzes
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <h3>{{ total_attempts }}</h3>
+                                <p class="mb-0">Total Attempts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-percentage fa-2x mb-2"></i>
+                                <h3>{{ "%.1f"|format(avg_score) }}%</h3>
+                                <p class="mb-0">Average Score</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-trophy fa-2x mb-2"></i>
+                                <h3>{{ max_score }}</h3>
+                                <p class="mb-0">Highest Score</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                <h3>{{ "%.1f"|format(pass_rate) }}%</h3>
+                                <p class="mb-0">Pass Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Quiz Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Title:</strong></td>
+                                        <td>{{ quiz.title }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Description:</strong></td>
+                                        <td>{{ quiz.description or 'No description' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Difficulty:</strong></td>
+                                        <td>
+                                            <span class="badge bg-{% if quiz.difficulty_level == 'beginner' %}success{% elif quiz.difficulty_level == 'intermediate' %}warning{% else %}danger{% endif %}">
+                                                {{ quiz.difficulty_level.title() }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Time Limit:</strong></td>
+                                        <td>{{ quiz.time_limit // 60 }} minutes</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total Questions:</strong></td>
+                                        <td>{{ quiz.total_questions }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Created:</strong></td>
+                                        <td>{{ quiz.created_at.split(' ')[0] if quiz.created_at else 'Unknown' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Performance Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Average Score:</span>
+                                        <span class="fw-bold">{{ "%.1f"|format(avg_score) }}%</span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar bg-success" style="width: {{ avg_score }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Pass Rate (80%+):</span>
+                                        <span class="fw-bold">{{ "%.1f"|format(pass_rate) }}%</span>
+                                    </div>
+                                    <div class="progress mt-1">
+                                        <div class="progress-bar bg-info" style="width: {{ pass_rate }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Score Range:</span>
+                                        <span class="fw-bold">{{ min_score }} - {{ max_score }}</span>
+                                    </div>
+                                </div>
+                                
+                                {% if total_attempts > 0 %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Insights:</strong>
+                                    {% if pass_rate >= 80 %}
+                                        Students are performing well on this quiz!
+                                    {% elif pass_rate >= 60 %}
+                                        Students are performing moderately. Consider reviewing difficult concepts.
+                                    {% else %}
+                                        Students are struggling with this quiz. Consider additional support or quiz revision.
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Student Results Table -->
+        {% if results %}
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Student Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                                <th>Date Taken</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-user me-2"></i>{{ result.student_name }}
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ result.score }} / {{ result.total_questions }}</span>
+                                </td>
+                                <td>
+                                    {% set percentage = (result.score / result.total_questions) * 100 %}
+                                    <span class="{% if percentage >= 80 %}text-success{% elif percentage >= 60 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                                        {{ "%.1f"|format(percentage) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set percentage = (result.score / result.total_questions) * 100 %}
+                                    {% if percentage >= 80 %}
+                                        <span class="badge bg-success">Passed</span>
+                                    {% elif percentage >= 60 %}
+                                        <span class="badge bg-warning">Needs Improvement</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ result.timestamp.split(' ')[0] if result.timestamp else 'Unknown' }}</td>
+                                <td>
+                                    <a href="{{ url_for('quiz.student_performance', quiz_id=quiz.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Results Yet</h5>
+                <p class="text-muted">No students have taken this quiz yet.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">My Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="{{ user.avatar_url or '/static/images/default-avatar.png' }}" 
+                                 class="img-fluid rounded-circle mb-3" 
+                                 style="width: 150px; height: 150px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-8">
+                            <h5>{{ user.full_name or user.username }}</h5>
+                            <p class="text-muted">{{ user.role.title() }}</p>
+                            <hr>
+                            <p><strong>Username:</strong> {{ user.username }}</p>
+                            <p><strong>Email:</strong> {{ user.email }}</p>
+                            <p><strong>User ID:</strong> {{ user.user_id }}</p>
+                            <p><strong>Member Since:</strong> {{ user.created_at }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('profile.edit_profile') }}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                        <a href="{{ url_for('profile.change_password') }}" class="btn btn-warning">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('profile.upload_avatar') }}" class="btn btn-info">
+                            <i class="fas fa-camera"></i> Upload Avatar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

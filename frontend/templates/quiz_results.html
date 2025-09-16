@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Results - {{ results.quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Quiz Summary -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-trophy me-2"></i>Quiz Results</h4>
+                <small>{{ results.quiz.title }}</small>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-primary">{{ results.score }}/{{ results.total_questions }}</h3>
+                                <p class="mb-0">Score</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-success">{{ "%.1f"|format((results.score / results.total_questions) * 100) }}%</h3>
+                                <p class="mb-0">Percentage</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h3 class="text-info">{{ results.total_questions - results.score }}</h3>
+                                <p class="mb-0">Incorrect</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                {% set percentage = (results.score / results.total_questions) * 100 %}
+                                {% if percentage >= 80 %}
+                                    <h3 class="text-success">Excellent!</h3>
+                                {% elif percentage >= 60 %}
+                                    <h3 class="text-warning">Good!</h3>
+                                {% else %}
+                                    <h3 class="text-danger">Keep Learning!</h3>
+                                {% endif %}
+                                <p class="mb-0">Performance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list-check me-2"></i>Detailed Results</h5>
+                <small>Review your answers and learn from the explanations</small>
+            </div>
+            <div class="card-body">
+                {% for result in results.detailed_results %}
+                <div class="card mb-4 {% if result.is_correct == True %}border-success{% elif result.is_correct == False %}border-danger{% else %}border-info{% endif %}">
+                    <div class="card-header {% if result.is_correct == True %}bg-success text-white{% elif result.is_correct == False %}bg-danger text-white{% else %}bg-info text-white{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Question {{ loop.index }}</h6>
+                            <div>
+                                {% if result.is_correct == True %}
+                                    <i class="fas fa-check-circle me-2"></i>Correct
+                                {% elif result.is_correct == False %}
+                                    <i class="fas fa-times-circle me-2"></i>Incorrect
+                                {% else %}
+                                    <i class="fas fa-question-circle me-2"></i>Completed
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">{{ result.question.question_text }}</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Options:</h6>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item {% if result.question.correct_option == 1 %}bg-success text-white{% elif result.user_answer == 1 and result.is_correct == False %}bg-danger text-white{% endif %}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-2">A</span>
+                                            {{ result.question.option1 }}
+                                            {% if result.question.correct_option == 1 %}
+                                                <i class="fas fa-check ms-auto"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="list-group-item {% if result.question.correct_option == 2 %}bg-success text-white{% elif result.user_answer == 2 and result.is_correct == False %}bg-danger text-white{% endif %}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-2">B</span>
+                                            {{ result.question.option2 }}
+                                            {% if result.question.correct_option == 2 %}
+                                                <i class="fas fa-check ms-auto"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="list-group-item {% if result.question.correct_option == 3 %}bg-success text-white{% elif result.user_answer == 3 and result.is_correct == False %}bg-danger text-white{% endif %}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-2">C</span>
+                                            {{ result.question.option3 }}
+                                            {% if result.question.correct_option == 3 %}
+                                                <i class="fas fa-check ms-auto"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="list-group-item {% if result.question.correct_option == 4 %}bg-success text-white{% elif result.user_answer == 4 and result.is_correct == False %}bg-danger text-white{% endif %}">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-2">D</span>
+                                            {{ result.question.option4 }}
+                                            {% if result.question.correct_option == 4 %}
+                                                <i class="fas fa-check ms-auto"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Your Answer:</h6>
+                                <p class="mb-3">
+                                    {% if result.user_answer %}
+                                        <span class="badge {% if result.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ ['A', 'B', 'C', 'D'][result.user_answer - 1] }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Answer</span>
+                                    {% endif %}
+                                </p>
+                                
+                                <h6>Correct Answer:</h6>
+                                <p class="mb-3">
+                                    <span class="badge bg-success">
+                                        {{ ['A', 'B', 'C', 'D'][result.question.correct_option - 1] }}
+                                    </span>
+                                </p>
+                                
+                                {% if result.explanation %}
+                                <h6>Explanation:</h6>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb me-2"></i>{{ result.explanation }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('quiz.home') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+            <div>
+                <a href="{{ url_for('quiz.subjects') }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-book me-2"></i>Browse Subjects
+                </a>
+                <a href="{{ url_for('quiz.view_results') }}" class="btn btn-outline-success">
+                    <i class="fas fa-chart-line me-2"></i>View All Results
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item.bg-success {
+    background-color: #d4edda !important;
+    border-color: #c3e6cb !important;
+}
+
+.list-group-item.bg-danger {
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+}
+
+[data-bs-theme="dark"] .list-group-item.bg-success {
+    background-color: #0f5132 !important;
+    border-color: #0a4128 !important;
+}
+
+[data-bs-theme="dark"] .list-group-item.bg-danger {
+    background-color: #842029 !important;
+    border-color: #6a1a21 !important;
+}
+</style>
+{% endblock %}

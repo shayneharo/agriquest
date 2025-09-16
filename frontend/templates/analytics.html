@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - AgriQuest{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="fas fa-chart-line me-2"></i>My Performance Analytics</h1>
+                <p class="text-muted mb-0">Track your learning progress and performance</p>
+            </div>
+            <a href="{{ url_for('quiz.home') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Overall Performance -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ analytics.overall.total_quizzes or 0 }}</h3>
+                <p class="mb-0">Total Quizzes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ "%.1f"|format(analytics.overall.average_score or 0) }}%</h3>
+                <p class="mb-0">Average Score</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ "%.1f"|format(analytics.overall.best_score or 0) }}%</h3>
+                <p class="mb-0">Best Score</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ "%.1f"|format(analytics.overall.worst_score or 0) }}%</h3>
+                <p class="mb-0">Worst Score</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Performance by Subject -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Performance by Subject</h5>
+            </div>
+            <div class="card-body">
+                {% if analytics.by_subject %}
+                    {% for subject in analytics.by_subject %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold">{{ subject.subject_name }}</span>
+                            <span class="badge bg-{{ 'success' if subject.average_score >= 80 else 'warning' if subject.average_score >= 60 else 'danger' }}">
+                                {{ "%.1f"|format(subject.average_score) }}%
+                            </span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-{{ 'success' if subject.average_score >= 80 else 'warning' if subject.average_score >= 60 else 'danger' }}" 
+                                 style="width: {{ subject.average_score }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ subject.quiz_count }} quiz{{ 'es' if subject.quiz_count != 1 else '' }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Data Available</h5>
+                        <p class="text-muted">Take some quizzes to see your performance analytics</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Weak Areas -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h5>
+            </div>
+            <div class="card-body">
+                {% if weak_areas %}
+                    {% for area in weak_areas %}
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ area.subject_name }}</strong><br>
+                            <small>{{ area.quiz_count }} quiz{{ 'es' if area.quiz_count != 1 else '' }} taken</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-warning">{{ "%.1f"|format(area.average_score) }}%</span>
+                            <br>
+                            <small class="text-muted">Below 70%</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5 class="text-success">Great Job!</h5>
+                        <p class="text-muted">You don't have any weak areas. Keep up the excellent work!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Performance Trend -->
+{% if analytics.recent_trend %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Recent Performance Trend (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for day in analytics.recent_trend[:7] %}
+                    <div class="col-md-2 mb-3">
+                        <div class="text-center">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <h6 class="mb-1">{{ "%.1f"|format(day.daily_average) }}%</h6>
+                                    <small class="text-muted">{{ day.date }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

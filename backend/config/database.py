@@ -83,8 +83,17 @@ def init_db():
     c.execute(create_subjects_table)
     
     # Check if quizzes table exists and has the new columns
-    c.execute("PRAGMA table_info(quizzes)")
-    quiz_columns = [column[1] for column in c.fetchall()]
+    if not is_postgres:
+        c.execute("PRAGMA table_info(quizzes)")
+        quiz_columns = [column[1] for column in c.fetchall()]
+    else:
+        # For PostgreSQL, get column names differently
+        c.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'quizzes'
+        """)
+        quiz_columns = [column[0] for column in c.fetchall()]
     
     # Quizzes table
     create_quizzes_table = f'''CREATE TABLE IF NOT EXISTS quizzes
@@ -99,16 +108,26 @@ def init_db():
     c.execute(create_quizzes_table)
     
     # Add new columns to quizzes table if they don't exist
-    if 'subject_id' not in quiz_columns:
-        c.execute("ALTER TABLE quizzes ADD COLUMN subject_id INTEGER")
     if 'description' not in quiz_columns:
-        c.execute("ALTER TABLE quizzes ADD COLUMN description TEXT")
+        if is_postgres:
+            c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS description TEXT")
+        else:
+            c.execute("ALTER TABLE quizzes ADD COLUMN description TEXT")
     if 'difficulty_level' not in quiz_columns:
-        c.execute("ALTER TABLE quizzes ADD COLUMN difficulty_level TEXT DEFAULT 'beginner'")
+        if is_postgres:
+            c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS difficulty_level TEXT DEFAULT 'beginner'")
+        else:
+            c.execute("ALTER TABLE quizzes ADD COLUMN difficulty_level TEXT DEFAULT 'beginner'")
     if 'time_limit' not in quiz_columns:
-        c.execute("ALTER TABLE quizzes ADD COLUMN time_limit INTEGER DEFAULT 0")
+        if is_postgres:
+            c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS time_limit INTEGER DEFAULT 0")
+        else:
+            c.execute("ALTER TABLE quizzes ADD COLUMN time_limit INTEGER DEFAULT 0")
     if 'created_at' not in quiz_columns:
-        c.execute("ALTER TABLE quizzes ADD COLUMN created_at DATETIME")
+        if is_postgres:
+            c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS created_at TIMESTAMP")
+        else:
+            c.execute("ALTER TABLE quizzes ADD COLUMN created_at DATETIME")
         # Update existing records with current timestamp
         c.execute("UPDATE quizzes SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL")
     
